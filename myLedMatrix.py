@@ -304,7 +304,39 @@ class LedMatrix:
             column += 7
             
             
+if __name__ == "__main__":
+    import sys
+    import math
+    if len(sys.argv) == 2:
+        strip = LedStrip(int(sys.argv[1]))
+        strip.setall2off()
+        delay = 1 / math.sqrt(50 * strip.pixels)
+        for runs in range(5):
+            strip.pixel[0].set2green()
+            strip.pixel[1].set2yellow()
+            strip.pixel[2].set2blue()
+            for x in range(3,strip.pixels):
+                strip.rotate_right()
+                strip.show()
+                time.sleep(delay)
+            strip.pixel[strip.pixels - 1].set2green()
+            strip.pixel[strip.pixels - 2].set2yellow()
+            strip.pixel[strip.pixels - 3].set2blue()
+            for x in range(3,strip.pixels):
+                strip.rotate_left()
+                strip.show()
+                time.sleep(delay)
+        strip.setall2off()
+        strip.show()
+        print( "bye" )
+    elif len(sys.argv) == 3:
+        print ( "MatrixTest" )
+    else:
+        print ( " usage: myLedMatrix <pixel> or myLedMatrix <rows> <colums>" )
         
+                       
+
+    
 
     
     

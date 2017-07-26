@@ -109,8 +109,54 @@ class LedStrip:
     def set2off(self, pixel=None):
         if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
             raise TypeError("invalid pixel value")
-        self.pixel[pixel1].set2off( )
+        self.pixel[pixel-1].set2off( )
 
+    def set2red(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2red( )
+
+    def set2green(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2green( )
+
+    def set2blue(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2blue( )
+
+    def set2yellow(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2yellow( )
+
+    def set2magenta(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2magenta( )
+
+    def set2cyan(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2cyan( )
+
+    def set2white(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2white( )
+
+    def set2fullwhite(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2fullwhite( )
+
+    def set2color(self, pixel=None, red=0, green=0, blue=0, brightness=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2color(red, green, blue, brightness)
+
+        
     def test(self):
         for x in range ( self.pixels ):
             if x % 7 == 0:

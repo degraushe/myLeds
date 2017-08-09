@@ -354,6 +354,7 @@ if __name__ == "__main__":
     import sys
     import math
     if len(sys.argv) == 2:
+        print ( "LedStripTest" )
         strip = LedStrip(int(sys.argv[1]))
         strip.setall2off()
         delay = 1 / math.sqrt(50 * strip.pixels)
@@ -376,7 +377,33 @@ if __name__ == "__main__":
         strip.show()
         print( "bye" )
     elif len(sys.argv) == 3:
-        print ( "MatrixTest" )
+        print ( "LedMatrixTest" )
+        matrix = LedMatrix(int(sys.argv[1]),int(sys.argv[2]))
+        matrix.setall2off()
+        delay = 1 / math.sqrt(5 * matrix.rows)
+        for x in range(matrix.rows):
+            for y in range(matrix.columns):
+                if x % 7 == 0 :
+                    matrix.row[x].pixel[y].set2red() 
+                elif x % 7 == 1 :
+                    matrix.row[x].pixel[y].set2green()
+                elif x % 7 == 2 :
+                    matrix.row[x].pixel[y].set2blue()
+                elif x % 7 == 3 :
+                    matrix.row[x].pixel[y].set2cyan()
+                elif x % 7 == 4 :
+                    matrix.row[x].pixel[y].set2magenta()
+                elif x % 7 == 5 :
+                    matrix.row[x].pixel[y].set2yellow()
+                elif x % 7 == 6 :
+                    matrix.row[x].pixel[y].set2white()
+        for runs in range( 5 * matrix.rows):
+            matrix.show()
+            time.sleep(delay)
+            matrix.rotate_up()
+        matrix.setall2off()
+        matrix.show()
+        print( "bye" )
     else:
         print ( " usage: myLedMatrix <pixel> or myLedMatrix <rows> <colums>" )
         

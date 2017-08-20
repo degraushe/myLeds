@@ -1,4 +1,4 @@
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 import spidev
 import time
@@ -109,8 +109,54 @@ class LedStrip:
     def set2off(self, pixel=None):
         if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
             raise TypeError("invalid pixel value")
-        self.pixel[pixel1].set2off( )
+        self.pixel[pixel-1].set2off( )
 
+    def set2red(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2red( )
+
+    def set2green(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2green( )
+
+    def set2blue(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2blue( )
+
+    def set2yellow(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2yellow( )
+
+    def set2magenta(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2magenta( )
+
+    def set2cyan(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2cyan( )
+
+    def set2white(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2white( )
+
+    def set2fullwhite(self, pixel=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2fullwhite( )
+
+    def set2color(self, pixel=None, red=0, green=0, blue=0, brightness=None):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].set2color(red, green, blue, brightness)
+
+        
     def test(self):
         for x in range ( self.pixels ):
             if x % 7 == 0:
@@ -188,11 +234,11 @@ class LedMatrix:
         if led_type not in LED_TYPE:
             raise TypeError("unknown LED type, use APA102 or SK9822")
         self.led_type = led_type
-        if type( rows ) is not int or rows < 2 or rows > 16:
-            raise TypeError("rows value must be 0..16")
+        if type( rows ) is not int or rows < 2 or rows > 30:
+            raise TypeError("rows value must be 2..30")
         self.rows = rows
-        if type( columns ) is not int or columns < 2 or columns > 64:
-            raise TypeError("columns value must be 0..64")
+        if type( columns ) is not int or columns < 2 or columns > 300:
+            raise TypeError("columns value must be 2..300")
         self.columns = columns
         self.row = [ LedStrip( columns, led_type ) for x in range ( rows ) ]
         
@@ -219,6 +265,9 @@ class LedMatrix:
                     self.row[x].pixel[y].set2blue()
                 if y % 4 == 3:
                     self.row[x].pixel[y].set2white()
+
+    def setall2random(self):
+        [ self.row[x].setall2random( ) for x in range ( self.rows ) ]
                 
 
     def rotate_left(self):
@@ -301,10 +350,99 @@ class LedMatrix:
         for char in text:
             if not ( replace and char == ' ' ):
                 self.set7x5char( char, 1, column, red, green, blue )
-            column += 7
+            column += 6
+
+class LedVirtualMatrix( LedMatrix ):
+    def __init__( self, rows=30, columns=300, ledRows=7, ledColumns=30, led_type=LED_TYPE[1] ):
+        if led_type not in LED_TYPE:
+            raise TypeError("unknown LED type, use APA102 or SK9822")
+        self.led_type = led_type
+        if type( ledRows ) is not int or ledRows < 2 or ledRows > 16:
+            raise TypeError("led rows value must be 2..16")
+        self.ledRows = ledRows
+        if type( ledColumns ) is not int or ledColumns < 2 or ledColumns > 64:
+            raise TypeError("led columns value must be 2..64")
+        self.ledColumns = ledColumns
+
+        LedMatrix.__init__( self, rows, columns, led_type )
+
+        if self.ledRows > self.rows:
+            raise TypeError("rows value must be equal or greater than led rows value")
+        if self.ledColumns > self.columns:
+            raise TypeError("columns value must be equal or greater than led columns value")
+
+    def show(self, startRow=1, startColumn=1):
+        # keep window in virtual matrix
+        self.startRow = ( startRow - 1 ) % ( self.rows - self.ledRows + 1 ) + 1
+        self.startColumn = ( startColumn - 1 ) % ( self.columns - self.ledColumns + 1 ) + 1
+        # start frames    
+        self.databytes = [ 0x00, 0x00, 0x00, 0x00 ]  
+        # serpent 1,1-1,n, 2,n-2,1, 3.1-3,n, ...
+        for x in range ( self.ledRows ):
+            xLed = x + self.startRow - 1
+            for y in range ( self.ledColumns ):
+                yLed = ( self.startColumn - 1 ) + y
+                if x % 2 == 1:
+                    yLed = ( self.startColumn - 1 ) + ( self.ledColumns - 1 ) - y 
+                self.databytes = self.databytes + self.row[ xLed ].pixel[ yLed ].databytes
+        # refresh bytes for SK9822
+        if self.led_type == LED_TYPE[1]:  
+            self.databytes = self.databytes + [ 0x00, 0x00, 0x00, 0x00 ]
+        # additional clocks ticks - 1/2 per row
+        for x in range ( ( ( self.ledRows * self.ledColumns - 1 ) // 2 + 1 ) // 8 + 1 ):
+            self.databytes = self.databytes + [ 0x00 ]
+        # write to LED using SPI
+        spi = spidev.SpiDev()
+        spi.open(0, 1)
+        spi.max_speed_hz=8000000
+        spi.xfer2( self.databytes )
+        spi.close()
+
+
+           
             
-            
+if __name__ == "__main__":
+    import sys
+    import math
+    if len(sys.argv) == 2:
+        print ( "LedStripTest" )
+        strip = LedStrip(int(sys.argv[1]))
+        strip.setall2off()
+        delay = 1 / math.sqrt(50 * strip.pixels)
+        for runs in range(5):
+            strip.pixel[0].set2green()
+            strip.pixel[1].set2yellow()
+            strip.pixel[2].set2blue()
+            for x in range(3,strip.pixels):
+                strip.rotate_right()
+                strip.show()
+                time.sleep(delay)
+            strip.pixel[strip.pixels - 1].set2green()
+            strip.pixel[strip.pixels - 2].set2yellow()
+            strip.pixel[strip.pixels - 3].set2blue()
+            for x in range(3,strip.pixels):
+                strip.rotate_left()
+                strip.show()
+                time.sleep(delay)
+        strip.setall2off()
+        strip.show()
+        print( "bye" )
+    elif len(sys.argv) == 3:
+        print ( "LedMatrixTest" )
+        matrix = LedMatrix(int(sys.argv[1]),int(sys.argv[2]))
+        for runs in range( 50 ):
+            matrix.setall2random()
+            matrix.show()
+            time.sleep( 0.2 )
+        matrix.setall2off()
+        matrix.show()
+        print( "bye" )
+    else:
+        print ( " usage: myLedMatrix <pixel> or myLedMatrix <rows> <colums>" )
         
+                       
+
+    
 
     
     

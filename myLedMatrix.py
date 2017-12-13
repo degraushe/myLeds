@@ -4,6 +4,7 @@ import spidev
 import time
 import random
 
+
 from digit_7x5 import digit_7x5
 
 LED_TYPE = ("APA102", "SK9822")
@@ -44,6 +45,10 @@ class Led:
         
     def set2magenta(self):
         self.set2color(blue=128, red=128)
+
+    def change2color(self, new_red=0, new_green=0, new_blue=0 ):
+        if self.red > 0 or self.green > 0 or self.blue > 0:
+            self.set2color( new_red, new_green, new_blue )
         
     def set2color(self, red=0, green=0, blue=0, brightness=None):
         """ 
@@ -155,7 +160,12 @@ class LedStrip:
             raise TypeError("invalid pixel value")
         self.pixel[pixel-1].set2color(red, green, blue, brightness)
 
-        
+    def change2color(self, pixel=None, new_red=0, new_green=0, new_blue=0):
+        if not ( type(pixel) is int and 1 <= pixel <= self.pixels ):
+            raise TypeError("invalid pixel value")
+        self.pixel[pixel-1].change2color(new_red, new_green, new_blue)
+
+       
     def test(self):
         for x in range ( self.pixels ):
             if x % 7 == 0:
@@ -247,6 +257,10 @@ class LedMatrix:
         
     def setall2off(self):
         [ self.row[x].pixel[y].set2off( )
+          for x in range ( self.rows ) for y in range ( self.columns )]
+
+    def changeall2color(self, new_red=0, new_green=0, new_blue=0):
+        [ self.row[x].pixel[y].change2color( new_red, new_green, new_blue )
           for x in range ( self.rows ) for y in range ( self.columns )]
 
     def test(self):

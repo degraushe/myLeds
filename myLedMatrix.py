@@ -4,7 +4,6 @@ import spidev
 import time
 import random
 
-
 from digit_7x5 import digit_7x5
 
 LED_TYPE = ("APA102", "SK9822")

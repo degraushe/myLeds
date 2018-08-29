@@ -94,8 +94,8 @@ class LedStrip:
         if led_type not in LED_TYPE:
             raise TypeError("unknown LED type, use APA102 or SK9822")
         self.led_type = led_type
-        if not ( type(pixels) is int and 2 <= pixels <= 300 ):
-            raise TypeError("pixels value must be 2..300")
+        if not ( type(pixels) is int and 2 <= pixels <= 1000 ):
+            raise TypeError("pixels value must be 2..1000")
         self.pixels = pixels
         self.pixel = [ Led( led_type=led_type ) for x in range ( pixels ) ]
         
@@ -243,11 +243,11 @@ class LedMatrix:
         if led_type not in LED_TYPE:
             raise TypeError("unknown LED type, use APA102 or SK9822")
         self.led_type = led_type
-        if type( rows ) is not int or rows < 2 or rows > 30:
-            raise TypeError("rows value must be 2..30")
+        if type( rows ) is not int or rows < 2 or rows > 79:
+            raise TypeError("rows value must be 2..79")
         self.rows = rows
-        if type( columns ) is not int or columns < 2 or columns > 300:
-            raise TypeError("columns value must be 2..300")
+        if type( columns ) is not int or columns < 2 or columns > 1000:
+            raise TypeError("columns value must be 2..1000")
         self.columns = columns
         self.row = [ LedStrip( columns, led_type ) for x in range ( rows ) ]
         

@@ -6,6 +6,7 @@ import random
 
 
 from digit_7x5 import digit_7x5
+from digit_5x3 import digit_5x3
 
 LED_TYPE = ("APA102", "SK9822")
 
@@ -371,6 +372,34 @@ class LedMatrix:
             print(text)
             
                          
+
+    def set2color( self, row=1, column=1, red=84, green=84, blue=84):
+        if type( row ) is not int or row < 1 or row  > self.rows:
+            raise TypeError("pixel does'nt fit in matrix rows")
+        if type( column ) is not int or column < 1 or column > self.columns:
+            raise TypeError("pixel does'nt fit in matrix columns")
+        self.row[row-1].pixel[column-1].set2color( red, green, blue )
+
+    def set5x3char( self, char=' ', startrow=1, startcolumn=1, red=84, green=84, blue=84):
+        if type( startrow ) is not int or startrow < 1 or startrow + 4 > self.rows:
+            raise TypeError("character does'nt fit in matrix rows")
+        if type( startcolumn ) is not int or startcolumn < 1 or startcolumn + 3 > self.columns:
+            raise TypeError("character does'nt fit in matrix columns")
+        for x in range(5):
+            for y in range(3):
+                if digit_5x3[char][x][y] == 0:
+                    self.row[startrow+x-1].pixel[startcolumn+y-1].set2off( )
+                else:
+                    self.row[startrow+x-1].pixel[startcolumn+y-1].set2color( red, green, blue )
+
+    def set5x3text( self, text=' ', red=84, green=84, blue=84, replace=False):
+        if not replace:
+            self.setall2off()
+        column = 1
+        for char in text:
+            if not ( replace and char == ' ' ):
+                self.set5x3char( char, 1, column, red, green, blue )
+            column += 4
 
     def set7x5char( self, char=' ', startrow=1, startcolumn=1, red=84, green=84, blue=84):
         if type( startrow ) is not int or startrow < 1 or startrow + 6 > self.rows:

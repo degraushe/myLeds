@@ -1,4 +1,4 @@
-__version__ = '0.1.6'
+__version__ = '0.2.0'
 
 import spidev
 import time
@@ -8,6 +8,9 @@ import random
 from digit_7x5 import digit_7x5
 
 LED_TYPE = ("APA102", "SK9822")
+
+# limit power consumption - maximum in mA
+power_limit = 9000
 
 class Led:
     def __init__(self, red=0, green=0, blue=0, brightness=32, led_type=LED_TYPE[1]):
@@ -223,20 +226,32 @@ class LedStrip:
                  
         
     def show(self):
-        self.databytes = [ 0x00, 0x00, 0x00, 0x00 ] # start frames
-        for x in self.pixel:  # data frames
+        # limit power consumption
+        global power_limit
+        power_total = 0
+        # build data output array
+        # start frames
+        self.databytes = [ 0x00, 0x00, 0x00, 0x00 ]
+        # data frames
+        for x in self.pixel:
             self.databytes = self.databytes + x.databytes
-        if self.led_type == LED_TYPE[1]:  # refresh frames for SK9822
+            power = ( x.databytes[1] * 20 / 255 +
+                      x.databytes[2] * 20 / 255 +
+                      x.databytes[3] * 20 / 255 ) * ( x.databytes[0] % 32 ) / 31
+            power_total += power  
+        # refresh frames for SK9822
+        if self.led_type == LED_TYPE[1]: 
             self.databytes = self.databytes + [ 0x00, 0x00, 0x00, 0x00 ]
+        # additional clocks ticks - 1/2 per pixel
         for x in range ( ( ( self.pixels - 1 ) // 2 + 1 ) // 8 + 1 ):
-            # additional clocks ticks - 1/2 per pixel
             self.databytes = self.databytes + [ 0x00 ]
-        # write to LED using SPI
-        spi = spidev.SpiDev()
-        spi.open(0, 1)
-        spi.max_speed_hz=8000000
-        spi.xfer2( self.databytes )
-        spi.close()
+        # write to LED using SPI - respect power limit 
+        if power_total < power_limit :
+            spi = spidev.SpiDev()
+            spi.open(0, 1)
+            spi.max_speed_hz=8000000
+            spi.xfer2( self.databytes )
+            spi.close()
 
 class LedMatrix:
     def __init__( self, rows=2, columns=2, led_type=LED_TYPE[1] ):
@@ -304,25 +319,38 @@ class LedMatrix:
         self.row.reverse()
         
     def show(self):
-        self.databytes = [ 0x00, 0x00, 0x00, 0x00 ]  # start frames
+        # limit power consumption
+        global power_limit
+        power_total = 0
+        # start frames
+        self.databytes = [ 0x00, 0x00, 0x00, 0x00 ] 
         for x in range ( self.rows ):  # serpent 1,1-1,n, 2,n-2,1, 3.1-3,n, ...
             if x % 2 == 0:
                 for y in self.row[x].pixel:
                     self.databytes = self.databytes + y.databytes
+                    power = ( y.databytes[1] * 20 / 255 +
+                              y.databytes[2] * 20 / 255 +
+                              y.databytes[3] * 20 / 255 ) * ( y.databytes[0] % 32 ) / 31
+                    power_total += power
             else:
                 for y in reversed(self.row[x].pixel):
                     self.databytes = self.databytes + y.databytes
+                    power = ( y.databytes[1] * 20 / 255 +
+                              y.databytes[2] * 20 / 255 +
+                              y.databytes[3] * 20 / 255 ) * ( y.databytes[0] % 32 ) / 31
+                    power_total += power  
         if self.led_type == LED_TYPE[1]:  # refresh bytes for SK9822
             self.databytes = self.databytes + [ 0x00, 0x00, 0x00, 0x00 ]
         for x in range ( ( ( self.rows * self.columns - 1 ) // 2 + 1 ) // 8 + 1 ):
             # additional clocks ticks - 1/2 per row
             self.databytes = self.databytes + [ 0x00 ]
-        # write to LED using SPI
-        spi = spidev.SpiDev()
-        spi.open(0, 1)
-        spi.max_speed_hz=8000000
-        spi.xfer2( self.databytes )
-        spi.close()
+        # write to LED using SPI - respect power limit 
+        if power_total < power_limit :
+            spi = spidev.SpiDev()
+            spi.open(0, 1)
+            spi.max_speed_hz=8000000
+            spi.xfer2( self.databytes )
+            spi.close()
 
            
     def showtext(self):
